@@ -1,6 +1,5 @@
-# This is a code repo for Application Track of CS194
+# Travel Planner X
 
-![poster](SmartHook.svg "poster")
 
 ## Overview
 
