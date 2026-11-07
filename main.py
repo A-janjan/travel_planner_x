@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, HTTPException
-from fastapi.responses import JSONResponse, FileResponse, StreamingResponse, HTMLResponse
+from fastapi.responses import JSONResponse, StreamingResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from pydantic import BaseModel
@@ -14,7 +14,7 @@ import asyncio
 # Load environment variables
 load_dotenv()
 
-app = FastAPI(title="SmartHook Travel API")
+app = FastAPI(title="Travel Planner X API")
 
 # Initialize the shared TravelGraph singleton on startup
 # This ensures agents are created once when the application starts
@@ -43,6 +43,12 @@ def get_or_create_session(session_id: Optional[str] = None) -> TravelGraph:
     return session_storage[session_id]
 
 
+@app.get("/health")
+async def health():
+    """Minimal liveness endpoint for local checks and process monitoring."""
+    return {"status": "ok"}
+
+
 # Pydantic models for request bodies
 class ProcessRequest(BaseModel):
     step: Optional[str] = "chat"
@@ -58,29 +64,21 @@ class StreamParams(BaseModel):
     session_id: Optional[str] = None
 
 
-@app.get("/test-image")
-async def test_image():
-    """Test image endpoint"""
-    return FileResponse("frontend/static/images/background.jpg", media_type="image/jpeg")
-
-
-@app.get("/static/images/{filename}")
-async def serve_image(filename: str):
-    """Serve image files"""
-    return FileResponse(f"frontend/static/images/{filename}")
-
-
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     """Render the main page"""
     # Load popular attractions
     try:
-        with open('frontend/data/popular_attractions.json', 'r') as f:
+        with open("frontend/data/popular_attractions.json", "r") as f:
             popular_attractions = json.load(f)
     except FileNotFoundError:
         popular_attractions = []
 
-    return templates.TemplateResponse("index.html", {"request": request, "popular_attractions": popular_attractions})
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+        context={"popular_attractions": popular_attractions},
+    )
 
 
 @app.post("/api/process")
@@ -100,8 +98,8 @@ async def process(request: Request, data: ProcessRequest):
         )
 
         # Add the current state and session_id to the result
-        result['state'] = workflow.get_current_state()
-        result['session_id'] = workflow.session_id
+        result["state"] = workflow.get_current_state()
+        result["session_id"] = workflow.session_id
         return JSONResponse(content=result)
 
     except Exception as e:
@@ -202,7 +200,7 @@ async def stream(
             parsed_attraction_ids = None
 
     # Check if the user is confirming satisfaction with the recommendation
-    satisfaction_message = 'satisfied with your recommendation' in user_input.lower()
+    satisfaction_message = "satisfied with your recommendation" in user_input.lower()
 
     if satisfaction_message:
         print(f"[DEBUG] Detected satisfaction message: '{user_input}'")
@@ -213,15 +211,15 @@ async def stream(
             result = workflow.process_step(step, user_input=user_input, selected_attraction_ids=parsed_attraction_ids)
 
             # Check the should_rent_car status right after processing
-            current_should_rent_car = workflow.get_current_state().get('should_rent_car', False)
+            current_should_rent_car = workflow.get_current_state().get("should_rent_car", False)
             print(f"[DEBUG] After processing step, should_rent_car = {current_should_rent_car}")
 
             # Handle streaming response
-            if 'stream' in result and result['stream']:
-                for chunk in result['stream']:
+            if "stream" in result and result["stream"]:
+                for chunk in result["stream"]:
                     # Handle both string chunks and objects with content attribute
                     content = ""
-                    if hasattr(chunk, 'content'):
+                    if hasattr(chunk, "content"):
                         content = chunk.content
                     elif isinstance(chunk, str):
                         content = chunk
@@ -229,29 +227,29 @@ async def stream(
                         content = str(chunk)
 
                     if content:
-                        yield f"data: {{\"type\": \"chunk\", \"content\": {json.dumps(content)} }}\n\n"
+                        yield f'data: {{"type": "chunk", "content": {json.dumps(content)} }}\n\n'
                         await asyncio.sleep(0.01)
 
             # Send completion data
             completion_data = {
-                'type': 'complete',
-                'next_step': result.get('next_step'),
-                'missing_fields': result.get('missing_fields', []),
-                'state': result.get('state'),
-                'attractions': result.get('attractions'),
-                'map_data': result.get('map_data'),
-                'itinerary': result.get('itinerary'),
-                'budget': result.get('budget'),
-                'response': result.get('response'),
-                'optimal_route': result.get('optimal_route'),
-                'rental_post': result.get('rental_post'),
+                "type": "complete",
+                "next_step": result.get("next_step"),
+                "missing_fields": result.get("missing_fields", []),
+                "state": result.get("state"),
+                "attractions": result.get("attractions"),
+                "map_data": result.get("map_data"),
+                "itinerary": result.get("itinerary"),
+                "budget": result.get("budget"),
+                "response": result.get("response"),
+                "optimal_route": result.get("optimal_route"),
+                "rental_post": result.get("rental_post"),
             }
 
             # Handle next step logic for strategy step
-            if step == 'strategy':
+            if step == "strategy":
                 current_state = workflow.get_current_state()
-                ai_recommendation_generated = current_state.get('ai_recommendation_generated', False)
-                should_rent_car = current_state.get('should_rent_car', False)
+                ai_recommendation_generated = current_state.get("ai_recommendation_generated", False)
+                should_rent_car = current_state.get("should_rent_car", False)
 
                 print(
                     f"[DEBUG] In stream endpoint, strategy step: ai_recommendation_generated={ai_recommendation_generated}, should_rent_car={should_rent_car}, satisfaction_message={satisfaction_message}"
@@ -259,15 +257,15 @@ async def stream(
 
                 # If the AI has provided recommendations
                 if ai_recommendation_generated or satisfaction_message:
-                    next_step = 'communication' if should_rent_car else 'route'
-                    completion_data['next_step'] = next_step
+                    next_step = "communication" if should_rent_car else "route"
+                    completion_data["next_step"] = next_step
                     print(f"[DEBUG] Setting next_step to '{next_step}' based on should_rent_car={should_rent_car}")
 
             yield f"data: {json.dumps(completion_data)}\n\n"
 
         except Exception as e:
             print(f"[ERROR] in stream route: {str(e)}")
-            yield f"data: {{\"type\": \"error\", \"error\": {json.dumps(str(e))} }}\n\n"
+            yield f'data: {{"type": "error", "error": {json.dumps(str(e))} }}\n\n'
 
     return StreamingResponse(generate(), media_type="text/event-stream")
 
@@ -283,7 +281,7 @@ async def get_nearby_places(attraction_id: str, request: Request, session_id: Op
 
     # Parse coordinates from attraction_id
     try:
-        lat_str, lng_str = attraction_id.split(',')
+        lat_str, lng_str = attraction_id.split(",")
         lat, lng = float(lat_str), float(lng_str)
     except Exception:
         raise HTTPException(status_code=400, detail="Invalid coordinates format. Use 'lat,lng'.")
@@ -295,14 +293,14 @@ async def get_nearby_places(attraction_id: str, request: Request, session_id: Op
         raise HTTPException(status_code=500, detail=f"Failed to get nearby places: {str(e)}")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     import uvicorn
 
     # Create data directory if it doesn't exist
-    os.makedirs('data', exist_ok=True)
+    os.makedirs("data", exist_ok=True)
 
     # Create a sample attractions.json file if it doesn't exist
-    if not os.path.exists('data/attractions.json'):
+    if not os.path.exists("data/attractions.json"):
         sample_data = {
             "Paris": [
                 {
@@ -342,8 +340,8 @@ if __name__ == '__main__':
             ],
         }
 
-        with open('data/attractions.json', 'w') as f:
+        with open("data/attractions.json", "w") as f:
             json.dump(sample_data, f)
 
     # Run the app
-    uvicorn.run(app, host="127.0.0.1", port=8000)
+    uvicorn.run(app, host="0.0.0.0", port=int(os.getenv("PORT", "8000")))

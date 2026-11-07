@@ -1,3 +1,4 @@
+import os
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 from typing import Generator
@@ -9,21 +10,24 @@ import re
 class StrategyAgent:
     def __init__(self, model_name="gpt-4o"):
         """Initialize StrategyAgent with AI model for planning"""
-        self.model = ChatOpenAI(model=model_name, temperature=0.7, streaming=True)
+        try:
+            self.model = (
+                ChatOpenAI(model=model_name, temperature=0.7, streaming=True) if os.getenv("OPENAI_API_KEY") else None
+            )
+        except Exception:
+            self.model = None
 
     def plan_remaining_time(self, selected_spots, total_days, all_attractions, user_prefs, weather_summary):
-        with open("input of strategy.txt", "w") as f:  # for debug
-            json.dump(
-                {
-                    "selected_spots": selected_spots,
-                    "total_days": total_days,
-                    "all_attractions": all_attractions,
-                    "user_prefs": user_prefs,
-                    "weather_summary": weather_summary,
-                },
-                f,
-                indent=4,
-            )
+        if self.model is None:
+            days = max(1, int(total_days or 1))
+            names = [spot.get("name", "Attraction") for spot in selected_spots]
+            daily_plan = {f"day{i + 1}": names[i::days] for i in range(days)}
+            hours = sum(float(spot.get("estimated_duration") or 2) for spot in selected_spots)
+            return {
+                "remaining_hours": max(0, days * 8 - hours),
+                "additional_attractions": list(selected_spots),
+                "daily_plan": daily_plan,
+            }
         print("now in plan_remaining_time")
         try:
             """Calculate remaining time and suggest additional attractions"""
@@ -59,7 +63,7 @@ class StrategyAgent:
             weather_str = weather_summary if weather_summary else "No specific weather summary provided."
 
             # Extract specific requirements if they exist
-            specific_requirements = user_prefs.get('specificRequirements', '')
+            specific_requirements = user_prefs.get("specificRequirements", "")
             specific_requirements_section = ""
             if specific_requirements:
                 specific_requirements_section = f"""
@@ -108,12 +112,12 @@ class StrategyAgent:
                 Ensure the output is a valid JSON object only.
                 """
                 result = utils.ask_openai(prompt)
-                print(f"Attempt {i+1} - Raw AI Output: {result}")  # Debug raw output
+                print(f"Attempt {i + 1} - Raw AI Output: {result}")  # Debug raw output
 
-                if result and 'answer' in result:
-                    raw_answer = result['answer']
+                if result and "answer" in result:
+                    raw_answer = result["answer"]
                     # Try to extract JSON part if it's embedded in text
-                    match = re.search(r'\{.*\}', raw_answer, re.DOTALL)
+                    match = re.search(r"\{.*\}", raw_answer, re.DOTALL)
                     if match:
                         json_str = match.group(0)
                         try:
@@ -131,16 +135,16 @@ class StrategyAgent:
                                 continue
                             print(f"Successfully parsed daily plan: {daily_plan_raw}")
                         except json.JSONDecodeError as e:
-                            print(f"JSON parsing failed on attempt {i+1}: {e}")
+                            print(f"JSON parsing failed on attempt {i + 1}: {e}")
                             print(f"Problematic JSON string: {json_str}")
                             daily_plan_raw = {}
                             continue  # Try again if parsing fails
                     else:
-                        print(f"No JSON object found in AI response on attempt {i+1}: {raw_answer}")
+                        print(f"No JSON object found in AI response on attempt {i + 1}: {raw_answer}")
                         daily_plan_raw = {}
                         continue
                 else:
-                    print(f"No answer from AI on attempt {i+1}")
+                    print(f"No answer from AI on attempt {i + 1}")
                     daily_plan_raw = {}
                     continue
 
@@ -165,7 +169,7 @@ class StrategyAgent:
                     print(f"Valid plan found: {daily_plan_raw}")
                     break  # Exit loop if a valid plan is found
                 else:
-                    print(f"Invalid plan on attempt {i+1}, retrying...")
+                    print(f"Invalid plan on attempt {i + 1}, retrying...")
 
             if not final_planned_attractions_names:  # If no valid plan after max_try
                 print("Failed to generate a valid plan after multiple attempts. Returning selected spots as fallback.")
@@ -236,16 +240,16 @@ class StrategyAgent:
             print(f"[DEBUG] Analyzing rental recommendation from text: {recommendation_text[:200]}...")
 
             # First, try to find a structured car rental marker if present
-            structured_marker = re.search(r'\[car_rental:(yes|no)\]', recommendation_text, re.IGNORECASE)
+            structured_marker = re.search(r"\[car_rental:(yes|no)\]", recommendation_text, re.IGNORECASE)
             if structured_marker:
                 decision = structured_marker.group(1).lower()
-                should_rent = decision == 'yes'
+                should_rent = decision == "yes"
                 print(f"[DEBUG] Found structured car rental marker: [{decision}], should_rent_car = {should_rent}")
                 return should_rent
 
             # Look for rental recommendation section
             car_rental_section_match = re.search(
-                r'car rental recommendation:(.+?)(?=\n\n|\Z)', recommendation_text, re.DOTALL | re.IGNORECASE
+                r"car rental recommendation:(.+?)(?=\n\n|\Z)", recommendation_text, re.DOTALL | re.IGNORECASE
             )
             if car_rental_section_match:
                 car_rental_section = car_rental_section_match.group(1).lower().strip()
@@ -330,22 +334,33 @@ class StrategyAgent:
 
     def get_ai_recommendation(self, user_prefs, selected_spots, total_days, user_name=None) -> Generator:
         """Get AI recommendation about the overall trip plan"""
+        if self.model is None:
+            user_prefs["should_rent_car"] = False
+
+            def offline_message():
+                yield AIMessage(
+                    content=(
+                        "Offline mode is active. A basic itinerary has been arranged from your selected attractions; "
+                        "please review travel times and details before your trip."
+                    )
+                )
+
+            return offline_message()
         print(f"[DEBUG] Received user_prefs in get_ai_recommendation: {user_prefs}")  # Debug log
 
         # Create prompt for the LLM
-        name = "Traveler"  # Always use a generic fallback
         spot_names = [spot["name"] for spot in selected_spots]
         days = total_days
 
         # Extract specific preferences
-        people = user_prefs.get('people', 1)
-        has_kids = user_prefs.get('kids', 'no').lower() == 'yes'
-        health_prefs = user_prefs.get('health', 'good')
-        budget = user_prefs.get('budget', 'medium')
-        hobbies = user_prefs.get('hobbies', '')
+        people = user_prefs.get("people", 1)
+        has_kids = str(user_prefs.get("kids", "no")).lower() in {"yes", "true"}
+        health_prefs = user_prefs.get("health", "good")
+        budget = user_prefs.get("budget", "medium")
+        hobbies = user_prefs.get("hobbies", "")
 
         # Extract specific requirements if they exist
-        specific_requirements = user_prefs.get('specificRequirements', '')
+        specific_requirements = user_prefs.get("specificRequirements", "")
         specific_requirements_section = ""
         if specific_requirements:
             specific_requirements_section = f"""
@@ -355,11 +370,11 @@ class StrategyAgent:
 
         prompt = f"""
         You are providing travel recommendations to a traveler who is planning a {days}-day trip with the following attractions:
-        {', '.join(spot_names)}
+        {", ".join(spot_names)}
         
         Their specific preferences are:
         - Number of people: {people}
-        - Traveling with children: {'Yes' if has_kids else 'No'}
+        - Traveling with children: {"Yes" if has_kids else "No"}
         - Health/Dietary requirements: {health_prefs}
         - Budget level: {budget}
         - Interests/Hobbies: {hobbies}
@@ -385,7 +400,7 @@ class StrategyAgent:
 
         messages = [
             SystemMessage(
-                content=f"You are a travel advisor helping a traveler plan their trip. Address them directly using second person (you/your). Format your response as requested with the car rental marker."
+                content="You are a travel advisor helping a traveler plan their trip. Address them directly using second person (you/your). Format your response as requested with the car rental marker."
             ),
             HumanMessage(content=prompt),
         ]
@@ -402,12 +417,12 @@ class StrategyAgent:
             should_rent_car = self.extract_rental_recommendation(recommendation_text)
 
             # Update the user_prefs with the new should_rent_car value
-            user_prefs['should_rent_car'] = should_rent_car
+            user_prefs["should_rent_car"] = should_rent_car
 
             print(f"[DEBUG] AI recommendation analyzed - should_rent_car: {should_rent_car}")
 
             # Remove the [car_rental:YES/NO] markers from the text before displaying to the user
-            cleaned_text = re.sub(r'\[car_rental:(yes|no)\]', '', recommendation_text, flags=re.IGNORECASE)
+            cleaned_text = re.sub(r"\[car_rental:(yes|no)\]", "", recommendation_text, flags=re.IGNORECASE)
 
             # Generate message chunks with the cleaned content for streaming
             def generate_chunks():

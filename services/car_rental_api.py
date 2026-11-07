@@ -1,6 +1,7 @@
 import http.client
 import json
-from urllib.parse import urlencode # For building query strings
+from urllib.parse import urlencode  # For building query strings
+
 
 class CarRentalService:
     """
@@ -8,6 +9,7 @@ class CarRentalService:
     Gets car rental data, processes to extract key information, sorts by price by default,
     returns top 10 results.
     """
+
     def __init__(self, rapidapi_key: str):
         """
         Initialize the service with a RapidAPI key.
@@ -20,26 +22,27 @@ class CarRentalService:
 
         self.api_key = rapidapi_key
         self.api_host = "booking-com-api5.p.rapidapi.com"
-        self.endpoint = "/car/avaliable-car" # Note the API provider's spelling
-        self.headers = {
-            "X-RapidAPI-Key": self.api_key,
-            "X-RapidAPI-Host": self.api_host
-        }
+        self.endpoint = "/car/avaliable-car"  # Note the API provider's spelling
+        self.headers = {"X-RapidAPI-Key": self.api_key, "X-RapidAPI-Host": self.api_host}
         print(f"CarRentalService initialized, host: {self.api_host}")
 
     def _process_response(self, api_response: dict) -> list[dict]:
         """
         (Internal helper method) Process the raw API response, extract simplified information.
         """
-        if not api_response or not isinstance(api_response, dict): return [] # Basic check
+        if not api_response or not isinstance(api_response, dict):
+            return []  # Basic check
         search_results = api_response.get("data", {}).get("search_results", [])
-        if not isinstance(search_results, list): return [] # Check if it's a list
-        if not search_results: return [] # Check if the list is empty
+        if not isinstance(search_results, list):
+            return []  # Check if it's a list
+        if not search_results:
+            return []  # Check if the list is empty
 
         processed_cars = []
 
         for offer in search_results:
-            if not isinstance(offer, dict): continue # Skip invalid items
+            if not isinstance(offer, dict):
+                continue  # Skip invalid items
             try:
                 pricing_info = offer.get("pricing_info", {})
                 vehicle_info = offer.get("vehicle_info", {})
@@ -48,7 +51,8 @@ class CarRentalService:
                 pickup_info = route_info.get("pickup", {})
 
                 price = pricing_info.get("drive_away_price")
-                if price is None: continue # Skip items without price
+                if price is None:
+                    continue  # Skip items without price
 
                 car_data = {
                     "car_model": vehicle_info.get("v_name", "N/A"),
@@ -67,18 +71,27 @@ class CarRentalService:
         print(f"Processed {len(processed_cars)} valid car rental options.")
         return processed_cars
 
-    def _sort_and_limit(self, processed_cars: list[dict], sort_by='price', limit=30) -> list[dict]:
+    def _sort_and_limit(self, processed_cars: list[dict], sort_by="price", limit=30) -> list[dict]:
         """(Internal helper method) Sort and limit the list."""
-        if not processed_cars: return []
+        if not processed_cars:
+            return []
         # ... (sorting and limiting logic remains unchanged) ...
-        key_func = None; reverse_sort = False
-        if sort_by == 'price':
-            key_func = lambda x: x.get('price', float('inf')); reverse_sort = False
+        key_func = None
+        reverse_sort = False
+        if sort_by == "price":
+
+            def key_func(car):
+                return car.get("price", float("inf"))
+
+            reverse_sort = False
             print("Sorting by price (low to high)...")
-        else: print(f"Warning: Unknown sorting option '{sort_by}'.")
+        else:
+            print(f"Warning: Unknown sorting option '{sort_by}'.")
         if key_func:
-            try: processed_cars.sort(key=key_func, reverse=reverse_sort)
-            except Exception as e: print(f"Sorting error: {e}.")
+            try:
+                processed_cars.sort(key=key_func, reverse=reverse_sort)
+            except Exception as e:
+                print(f"Sorting error: {e}.")
         final_count = min(len(processed_cars), limit)
         print(f"Limiting results to top {final_count}.")
         return processed_cars[:final_count]
@@ -86,11 +99,21 @@ class CarRentalService:
     def find_available_cars(
         self,
         # ... (method parameter definitions remain unchanged) ...
-        pickup_lat: float, pickup_lon: float, pickup_date: str, pickup_time: str, # HH:MM:SS
-        dropoff_lat: float, dropoff_lon: float, dropoff_date: str, dropoff_time: str, # HH:MM:SS
-        currency_code: str, driver_age: int | None = None, language_code: str | None = None,
-        pickup_loc_name: str | None = None, dropoff_loc_name: str | None = None,
-        pickup_city: str | None = None, dropoff_city: str | None = None
+        pickup_lat: float,
+        pickup_lon: float,
+        pickup_date: str,
+        pickup_time: str,  # HH:MM:SS
+        dropoff_lat: float,
+        dropoff_lon: float,
+        dropoff_date: str,
+        dropoff_time: str,  # HH:MM:SS
+        currency_code: str,
+        driver_age: int | None = None,
+        language_code: str | None = None,
+        pickup_loc_name: str | None = None,
+        dropoff_loc_name: str | None = None,
+        pickup_city: str | None = None,
+        dropoff_city: str | None = None,
     ) -> list[dict] | None:
         """
         Search for available vehicles, process results, sort by price, and return up to 10 results.
@@ -103,17 +126,24 @@ class CarRentalService:
         """
         # --- Build API request parameters ---
         querystring = {
-            "pickup_latitude": pickup_lat, "pickup_longtitude": pickup_lon, # API's spelling
-            "pickup_date": pickup_date, "pickup_time": pickup_time,      # HH:MM:SS
-            "dropoff_latitude": dropoff_lat, "dropoff_longtitude": dropoff_lon, # API's spelling
-            "drop_date": dropoff_date,        # API's name
-            "drop_time": dropoff_time,        # API's name, HH:MM:SS
-            "currency_code": currency_code
+            "pickup_latitude": pickup_lat,
+            "pickup_longtitude": pickup_lon,  # API's spelling
+            "pickup_date": pickup_date,
+            "pickup_time": pickup_time,  # HH:MM:SS
+            "dropoff_latitude": dropoff_lat,
+            "dropoff_longtitude": dropoff_lon,  # API's spelling
+            "drop_date": dropoff_date,  # API's name
+            "drop_time": dropoff_time,  # API's name, HH:MM:SS
+            "currency_code": currency_code,
         }
-        if driver_age is not None: querystring["driver_age"] = driver_age
-        if language_code is not None: querystring["languagecode"] = language_code
-        if pickup_loc_name is not None: querystring["pickup_location"] = pickup_loc_name
-        if dropoff_loc_name is not None: querystring["dropoff_location"] = dropoff_loc_name
+        if driver_age is not None:
+            querystring["driver_age"] = driver_age
+        if language_code is not None:
+            querystring["languagecode"] = language_code
+        if pickup_loc_name is not None:
+            querystring["pickup_location"] = pickup_loc_name
+        if dropoff_loc_name is not None:
+            querystring["dropoff_location"] = dropoff_loc_name
 
         # Build the endpoint with query parameters
         endpoint_with_params = f"{self.endpoint}?{urlencode(querystring)}"
@@ -125,25 +155,34 @@ class CarRentalService:
             conn.request("GET", endpoint_with_params, headers=self.headers)
             response = conn.getresponse()
             print(f"API request status: {response.status}")
-            
+
             if response.status != 200:
                 print(f"Error: API returned status code {response.status}")
                 return None
-                
+
             data = response.read()
             conn.close()
-            
+
             # Parse JSON response
-            raw_data = json.loads(data.decode('utf-8'))
+            raw_data = json.loads(data.decode("utf-8"))
             print("API response successfully parsed")
 
             # --- Process, sort, limit ---
             processed_data = self._process_response(raw_data)
-            final_results = self._sort_and_limit(processed_data, sort_by='price', limit=10)
+            final_results = self._sort_and_limit(processed_data, sort_by="price", limit=10)
 
-            return final_results # Return the final results list
+            return final_results  # Return the final results list
 
         # --- Error handling ---
-        except http.client.HTTPException as e: print(f"Error: HTTP connection issue - {e}"); return None
-        except json.JSONDecodeError as e: print(f"Error: Failed to parse JSON response - {e}"); print(f"Received raw response text (first 500 chars): {data.decode('utf-8')[:500] if 'data' in locals() else 'No data'}"); return None
-        except Exception as e: print(f"Unexpected error occurred: {e}"); return None
+        except http.client.HTTPException as e:
+            print(f"Error: HTTP connection issue - {e}")
+            return None
+        except json.JSONDecodeError as e:
+            print(f"Error: Failed to parse JSON response - {e}")
+            print(
+                f"Received raw response text (first 500 chars): {data.decode('utf-8')[:500] if 'data' in locals() else 'No data'}"
+            )
+            return None
+        except Exception as e:
+            print(f"Unexpected error occurred: {e}")
+            return None

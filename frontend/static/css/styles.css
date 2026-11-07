@@ -2,65 +2,60 @@
 
 /* NEW EXTENDED COLOR DEFINITION */
 :root {
-    --smartHook-primary: #7B8DAB;
+    --travel-planner-x-primary: #7B8DAB;
     /* Soft Slate Blue - Main actions, Navbar */
-    --smartHook-primary-darker: #6A7A99;
-    --smartHook-primary-lighter: #CED6E0;
-    --smartHook-accent: #FFA07A;
+    --travel-planner-x-primary-darker: #6A7A99;
+    --travel-planner-x-primary-lighter: #CED6E0;
+    --travel-planner-x-accent: #FFA07A;
     /* Light Salmon - Accents if needed */
-    --smartHook-text-on-primary: #FFFFFF;
-    --smartHook-text-on-accent: #FFFFFF;
-    --smartHook-text-dark: #333333;
-    --smartHook-text-medium: #555555;
-    --smartHook-text-light: #777777;
+    --travel-planner-x-text-on-primary: #FFFFFF;
+    --travel-planner-x-text-on-accent: #FFFFFF;
+    --travel-planner-x-text-dark: #333333;
+    --travel-planner-x-text-medium: #555555;
+    --travel-planner-x-text-light: #777777;
 
-    --smartHook-user-chat-bg: #FFFFFF;
-    --smartHook-user-chat-text: var(--smartHook-text-dark);
-    --smartHook-assistant-chat-bg: #f0f4f8;
-    --smartHook-assistant-chat-text: var(--smartHook-text-dark);
+    --travel-planner-x-user-chat-bg: #FFFFFF;
+    --travel-planner-x-user-chat-text: var(--travel-planner-x-text-dark);
+    --travel-planner-x-assistant-chat-bg: #f0f4f8;
+    --travel-planner-x-assistant-chat-text: var(--travel-planner-x-text-dark);
 
-    --smartHook-border-color: #dee2e6;
+    --travel-planner-x-border-color: #dee2e6;
 
     /* Card Header Specific Colors */
-    --smartHook-header-chat-bg: #D6EAF8;
+    --travel-planner-x-header-chat-bg: #D6EAF8;
     /* Soft Pale Blue */
-    --smartHook-header-chat-text: #2E86C1;
+    --travel-planner-x-header-chat-text: #2E86C1;
     /* Darker Blue text */
-    --smartHook-header-itinerary-bg: #D5F5E3;
+    --travel-planner-x-header-itinerary-bg: #D5F5E3;
     /* Soft Mint Green */
-    --smartHook-header-itinerary-text: #28B463;
+    --travel-planner-x-header-itinerary-text: #28B463;
     /* Darker Green text */
-    --smartHook-header-recommend-bg: #FCF3CF;
+    --travel-planner-x-header-recommend-bg: #FCF3CF;
     /* Soft Lemon Yellow */
-    --smartHook-header-recommend-text: #F39C12;
+    --travel-planner-x-header-recommend-text: #F39C12;
     /* Darker Yellow/Orange text */
-    --smartHook-header-selected-bg: #FAE5D3;
+    --travel-planner-x-header-selected-bg: #FAE5D3;
     /* Soft Peach */
-    --smartHook-header-selected-text: #E67E22;
+    --travel-planner-x-header-selected-text: #E67E22;
     /* Darker Orange text */
-    --smartHook-header-map-bg: #D1F2EB;
+    --travel-planner-x-header-map-bg: #D1F2EB;
     /* Soft Aqua/Cyan */
-    --smartHook-header-map-text: #16A085;
+    --travel-planner-x-header-map-text: #16A085;
     /* Darker Cyan text */
-    --smartHook-header-budget-bg: #E8DAEF;
+    --travel-planner-x-header-budget-bg: #E8DAEF;
     /* Soft Lavender */
-    --smartHook-header-budget-text: #8E44AD;
+    --travel-planner-x-header-budget-text: #8E44AD;
     /* Darker Purple text */
-    --smartHook-header-confirmation-bg: #FADBD8;
+    --travel-planner-x-header-confirmation-bg: #FADBD8;
     /* Soft Pink/Rose */
-    --smartHook-header-confirmation-text: #D35400;
+    --travel-planner-x-header-confirmation-text: #D35400;
     /* Darker reddish-orange text */
 }
 
-/* Background image for the entire page */
+/* Neutral page background; packed source archives do not include image assets. */
 body {
-    background-image: url('../images/background.jpg') !important;
-    background-size: cover;
-    background-position: center;
-    background-repeat: no-repeat;
-    background-attachment: fixed;
     min-height: 100vh;
-    background: rgba(255, 255, 255, 0.75);
+    background-color: #f3f5f7;
     /* Slightly more opaque for better readability */
     z-index: -1;
     /* Behind content */
@@ -115,7 +110,7 @@ body {
     border-radius: 18px;
     display: inline-block;
     max-width: 80%;
-    border: 1px solid var(--smartHook-border-color);
+    border: 1px solid var(--travel-planner-x-border-color);
 }
 
 .user {
@@ -127,18 +122,18 @@ body {
 
 .user .message-content {
     /* Style for the actual message bubble */
-    background-color: var(--smartHook-user-chat-bg);
-    color: var(--smartHook-user-chat-text);
+    background-color: var(--travel-planner-x-user-chat-bg);
+    color: var(--travel-planner-x-user-chat-text);
     float: right;
     /* CHANGED back to right, to make the bubble align right */
     /* Text inside the bubble will naturally be left-aligned unless specified otherwise by user-agent or other rules */
     /* If text is NOT left-aligned by default inside, explicitly add: text-align: left; */
-    border-color: var(--smartHook-primary-lighter);
+    border-color: var(--travel-planner-x-primary-lighter);
 }
 
 .assistant .message-content {
-    background-color: var(--smartHook-assistant-chat-bg);
-    color: var(--smartHook-assistant-chat-text);
+    background-color: var(--travel-planner-x-assistant-chat-bg);
+    color: var(--travel-planner-x-assistant-chat-text);
     float: left;
     border-color: #d1d9e6;
     /* Slightly darker border for assistant */
@@ -156,14 +151,14 @@ body {
     margin-bottom: 20px;
     background-color: #FFFFFF;
     /* Pure white for card bodies for max contrast */
-    border: 1px solid var(--smartHook-border-color);
+    border: 1px solid var(--travel-planner-x-border-color);
 }
 
 /* General Card Header base (padding, border, font-weight) */
 .card-header {
     padding: 0.75rem 1.25rem;
     margin-bottom: 0;
-    border-bottom: 1px solid var(--smartHook-border-color);
+    border-bottom: 1px solid var(--travel-planner-x-border-color);
     font-weight: 600;
     display: flex;
     /* Align icon and text nicely */
@@ -177,38 +172,38 @@ body {
 
 /* Specific Card Header Styles */
 .header-chat {
-    background-color: var(--smartHook-header-chat-bg);
-    color: var(--smartHook-header-chat-text);
+    background-color: var(--travel-planner-x-header-chat-bg);
+    color: var(--travel-planner-x-header-chat-text);
 }
 
 .header-itinerary {
-    background-color: var(--smartHook-header-itinerary-bg);
-    color: var(--smartHook-header-itinerary-text);
+    background-color: var(--travel-planner-x-header-itinerary-bg);
+    color: var(--travel-planner-x-header-itinerary-text);
 }
 
 .header-recommend {
-    background-color: var(--smartHook-header-recommend-bg);
-    color: var(--smartHook-header-recommend-text);
+    background-color: var(--travel-planner-x-header-recommend-bg);
+    color: var(--travel-planner-x-header-recommend-text);
 }
 
 .header-selected {
-    background-color: var(--smartHook-header-selected-bg);
-    color: var(--smartHook-header-selected-text);
+    background-color: var(--travel-planner-x-header-selected-bg);
+    color: var(--travel-planner-x-header-selected-text);
 }
 
 .header-map {
-    background-color: var(--smartHook-header-map-bg);
-    color: var(--smartHook-header-map-text);
+    background-color: var(--travel-planner-x-header-map-bg);
+    color: var(--travel-planner-x-header-map-text);
 }
 
 .header-budget {
-    background-color: var(--smartHook-header-budget-bg);
-    color: var(--smartHook-header-budget-text);
+    background-color: var(--travel-planner-x-header-budget-bg);
+    color: var(--travel-planner-x-header-budget-text);
 }
 
 .header-confirmation {
-    background-color: var(--smartHook-header-confirmation-bg);
-    color: var(--smartHook-header-confirmation-text);
+    background-color: var(--travel-planner-x-header-confirmation-bg);
+    color: var(--travel-planner-x-header-confirmation-text);
 }
 
 /* Navbar customization */
@@ -217,32 +212,32 @@ body {
     letter-spacing: 0.5px;
 }
 
-/* Navbar: uses .bg-primary which is now our main --smartHook-primary */
+/* Navbar: uses .bg-primary which is now our main --travel-planner-x-primary */
 .navbar.bg-primary {
-    background-color: var(--smartHook-primary) !important;
+    background-color: var(--travel-planner-x-primary) !important;
     /* Soft Slate Blue */
 }
 
 /* Button styling */
 .btn-primary {
-    background-color: var(--smartHook-primary);
-    border-color: var(--smartHook-primary);
-    color: var(--smartHook-text-on-primary);
+    background-color: var(--travel-planner-x-primary);
+    border-color: var(--travel-planner-x-primary);
+    color: var(--travel-planner-x-text-on-primary);
 }
 
 .btn-primary:hover,
 .btn-primary:focus {
-    background-color: var(--smartHook-primary-darker);
-    border-color: var(--smartHook-primary-darker);
-    color: var(--smartHook-text-on-primary);
+    background-color: var(--travel-planner-x-primary-darker);
+    border-color: var(--travel-planner-x-primary-darker);
+    color: var(--travel-planner-x-text-on-primary);
     box-shadow: none;
 }
 
 /* Accent button style (Example, can be applied to specific buttons if needed) */
 .btn-accent {
-    background-color: var(--smartHook-accent);
-    border-color: var(--smartHook-accent);
-    color: var(--smartHook-text-on-accent);
+    background-color: var(--travel-planner-x-accent);
+    border-color: var(--travel-planner-x-accent);
+    color: var(--travel-planner-x-text-on-accent);
 }
 
 .btn-accent:hover,
@@ -250,19 +245,19 @@ body {
     background-color: #F08080;
     /* Darker Coral */
     border-color: #F08080;
-    color: var(--smartHook-text-on-accent);
+    color: var(--travel-planner-x-text-on-accent);
     box-shadow: none;
 }
 
 .btn-outline-primary {
-    color: var(--smartHook-primary);
-    border-color: var(--smartHook-primary);
+    color: var(--travel-planner-x-primary);
+    border-color: var(--travel-planner-x-primary);
 }
 
 .btn-outline-primary:hover {
-    background-color: var(--smartHook-primary);
-    border-color: var(--smartHook-primary);
-    color: var(--smartHook-text-on-primary);
+    background-color: var(--travel-planner-x-primary);
+    border-color: var(--travel-planner-x-primary);
+    color: var(--travel-planner-x-text-on-primary);
 }
 
 /* Itinerary styling */
@@ -499,7 +494,7 @@ body {
 
 /* Route marker styles */
 .route-marker {
-    background-color: var(--smartHook-primary);
+    background-color: var(--travel-planner-x-primary);
     border: 2px solid white;
     border-radius: 50%;
     width: 24px;
@@ -565,7 +560,7 @@ body {
 /* Navbar: ensure text is visible if it was relying on .text-white with old primary */
 .navbar-dark .navbar-brand,
 .navbar-dark .navbar-nav .nav-link {
-    color: var(--smartHook-text-on-primary);
+    color: var(--travel-planner-x-text-on-primary);
 }
 
 .navbar-dark .navbar-toggler-icon {
@@ -574,26 +569,26 @@ body {
 
 /* Missing fields badge - changed from warning to a softer color */
 #missing-fields.alert-warning {
-    background-color: var(--smartHook-primary-lighter);
-    border-color: var(--smartHook-border-color);
-    color: var(--smartHook-text-medium);
+    background-color: var(--travel-planner-x-primary-lighter);
+    border-color: var(--travel-planner-x-border-color);
+    color: var(--travel-planner-x-text-medium);
 }
 
 #missing-fields .badge.bg-warning {
-    background-color: var(--smartHook-primary) !important;
-    color: var(--smartHook-text-on-primary) !important;
+    background-color: var(--travel-planner-x-primary) !important;
+    color: var(--travel-planner-x-text-on-primary) !important;
 }
 
 /* Badge styling */
 .badge.bg-primary {
-    background-color: var(--smartHook-primary) !important;
-    color: var(--smartHook-text-on-primary) !important;
+    background-color: var(--travel-planner-x-primary) !important;
+    color: var(--travel-planner-x-text-on-primary) !important;
 }
 
 /* Navbar: ensure text is visible if it was relying on .text-white with old primary */
 .navbar-dark .navbar-brand,
 .navbar-dark .navbar-nav .nav-link {
-    color: var(--smartHook-text-on-primary);
+    color: var(--travel-planner-x-text-on-primary);
 }
 
 .navbar-dark .navbar-toggler-icon {
@@ -602,12 +597,12 @@ body {
 
 /* Specifically for New Trip button */
 .btn-outline-light#reset-btn {
-    color: var(--smartHook-text-on-primary);
-    border-color: var(--smartHook-text-on-primary);
+    color: var(--travel-planner-x-text-on-primary);
+    border-color: var(--travel-planner-x-text-on-primary);
 }
 
 .btn-outline-light#reset-btn:hover {
-    background-color: var(--smartHook-text-on-primary);
-    color: var(--smartHook-primary);
-    border-color: var(--smartHook-text-on-primary);
+    background-color: var(--travel-planner-x-text-on-primary);
+    color: var(--travel-planner-x-primary);
+    border-color: var(--travel-planner-x-text-on-primary);
 }

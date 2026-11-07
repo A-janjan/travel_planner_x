@@ -1,115 +1,104 @@
 # Travel Planner X
 
-Travel Planner X is an intelligent, interactive travel planning application designed to help users plan custom travel itineraries with ease. It features an AI-powered chat interface, interactive map, personalized attraction recommendations, and dynamic itinerary and budget generation.
+An AI-assisted travel-planning web app that collects trip preferences, discovers attractions from OpenStreetMap-based services, recommends places, builds a day-by-day itinerary, estimates a budget, and visualizes places on a map.
 
----
+> **Project status:** Reconstructed from a Repomix source archive. The project is usable for local development, but should be treated as a prototype: sessions are in memory, external-service availability varies, and an LLM API key is needed for the full planning flow.
 
 ## Features
 
-- **Conversational Planning:** Chat with the AI assistant to describe your preferences and receive tailored travel suggestions.
-- **Interactive Map:** Visualize recommended attractions and your itinerary on an interactive map (powered by Leaflet & OpenStreetMap).
-- **Personalized Recommendations:** Get attraction suggestions based on your selected city and interests, with details and paginated browsing.
-- **Itinerary Generation:** Automatically build a day-by-day itinerary and estimated budget based on your choices.
-- **Nearby Places Info:** See restaurants and points of interest near each attraction.
-- **Seamless UX:** Reset your session, auto-scroll through popular places, and navigate easily with step indicators.
+- Conversational collection of trip details and constraints
+- Attraction discovery and personalized ranking
+- Itinerary and budget generation, including an offline fallback
+- Route ordering and map data
+- Weather, nearby-place, fuel-price, and optional car-rental integrations
+- Server-rendered FastAPI frontend with a streaming response endpoint
 
----
+## Quick start
 
-## Technologies Used
+Requires Python 3.10 or newer.
 
-- **Backend:** Python (likely Flask/FastAPI), serving as the main API.
-- **Frontend:** JavaScript, HTML, CSS (Bootstrap, custom styles).
-- **Mapping:** Leaflet.js with OpenStreetMap tiles.
-- **Data Visualization:** Dynamic display of attractions, itinerary, and route.
-- **Other:** Marked.js for Markdown rendering, MutationObserver for UI enhancements.
+Run the following commands from the repository root:
 
----
+```bash
+python -m venv .venv
 
-## Getting Started
+# macOS / Linux
+source .venv/bin/activate
+# Windows PowerShell: .venv\Scripts\Activate.ps1
 
-### Prerequisites
-
-- Python 3.8+
-- Node.js & npm (for frontend asset builds, if needed)
-- (Recommended) Virtualenv for Python dependencies
-
-### Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone https://github.com/A-janjan/travel_planner_x.git
-   cd travel_planner_x
-   ```
-
-2. **Install backend dependencies:**
-   ```bash
-   python -m venv venv
-   source venv/bin/activate
-   pip install -r requirements.txt
-   ```
-
-3. **Frontend setup (if applicable):**
-   - If there's a `package.json` in `frontend/`, run:
-     ```bash
-     cd frontend
-     npm install
-     # Build assets if needed
-     npm run build
-     cd ..
-     ```
-
-4. **Run the application:**
-   ```bash
-   # Example for Flask
-   export FLASK_APP=main.py
-   flask run
-   # Or, python main.py
-   ```
-
-5. **Access the app:**
-   - Open [http://localhost:5000](http://localhost:5000) in your browser.
-
----
-
-## Usage
-
-1. **Start a conversation:** Use the chat interface to describe your trip (destination, interests, dates, budget).
-2. **Explore recommendations:** Browse and select from recommended attractions, view details, and see their map locations.
-3. **Generate itinerary:** Confirm your selection to receive an optimized itinerary and budget estimate.
-4. **Review & refine:** Ask for adjustments, reset your plan, or explore nearby places for each attraction.
-
----
-
-## Project Structure
-
-```
-main.py                      # Backend API and logic
-/frontend
-  /static
-    /js/main.js              # Main frontend logic (UI, chat, map, recommendations)
-/templates                   # HTML templates
-README.md                    # Project documentation
-requirements.txt             # Python dependencies
+python -m pip install --upgrade pip
+python -m pip install -e '.[dev]'
+cp .env.example .env
 ```
 
----
+Add an `OPENAI_API_KEY` to `.env` to enable the full AI planning experience. The application can start without credentials, but some planning features will be limited and use deterministic fallbacks. Set `RAPIDAPI_KEY` only if you want live car-rental search; do not commit `.env`.
+
+Run the server from the repository root:
+
+```bash
+uvicorn main:app --host 0.0.0.0 --port "${PORT:-8000}"
+```
+
+Then open <http://localhost:8000>. For local development with automatic reload:
+
+```bash
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+## Configuration
+
+| Variable | Required | Purpose |
+|---|---:|---|
+| `OPENAI_API_KEY` | Recommended | Enables LLM-powered chat, ranking, strategy, and confirmation |
+| `OPENAI_MODEL` | No | Example model setting for deployments; some agents currently use their own model defaults |
+| `RAPIDAPI_KEY` | No | Enables the optional car-rental API integration |
+| `PORT` | No | Port used when launching through `python main.py` (default `8000`) |
+
+See [Configuration](docs/configuration.md) for integration details and [Security](docs/security.md) before deployment.
+
+## Project layout
+
+```text
+agents/                 Domain agents for chat, discovery, recommendations, strategy, and routing
+services/               External API and data-provider adapters
+workflows/               Session workflow and optional evaluation helper
+frontend/templates/      Jinja templates
+frontend/static/         CSS and JavaScript
+frontend/data/           Sample popular-attractions data
+data/                    Attraction and reference data
+main.py                  FastAPI application and HTTP endpoints
+docs/                    Setup, architecture, API, and security documentation
+tests/                   Repository health tests
+```
+
+## API overview
+
+- `GET /` — application page
+- `GET /health` — process health check
+- `POST /api/process` — process a workflow step using JSON
+- `GET /api/stream` — Server-Sent Events workflow response
+- `GET /api/attractions/{city}` — search attractions for a city
+- `GET /api/nearby/{lat},{lng}` — nearby places for coordinates
+- `GET /api/reset?session_id=...` — reset/create an in-memory session
+- `GET /api/sessions` — development session diagnostics
+- `DELETE /api/sessions/{session_id}` — delete a session
+
+Request and response details are in [API reference](docs/api.md).
+
+## Development checks
+
+```bash
+pytest
+python -m compileall -q agents services workflows main.py utils.py
+ruff check .
+```
+
+## Data, attribution, and licensing
+
+The supplied source archive did not include a license file, and its original project reference could not be verified during this cleanup. No new license is asserted here. Before publishing this derivative publicly, confirm that you have the necessary rights to all inherited code, data, and assets, and add the correct license and any legally required notices. See [provenance notes](docs/provenance.md).
+
+OpenStreetMap data is provided under the Open Database License; observe its attribution and usage requirements. External APIs and map tiles are subject to their own terms. Prices, forecasts, opening hours, and route estimates are informational and should be checked with providers before travel.
 
 ## Contributing
 
-Pull requests and suggestions are welcome! Please fork the repo and submit your ideas.
-
----
-
-## License
-
-**Proprietary** – This project is currently private.
-
----
-
-## Author
-
-- [A-janjan](https://github.com/A-janjan)
-
----
-
-*Travel Planner X – Plan smarter, travel better!*
+Issues and pull requests are welcome. Please avoid committing secrets, runtime caches, or personal travel data. Run the checks above before submitting a change.

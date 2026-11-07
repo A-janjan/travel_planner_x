@@ -172,7 +172,7 @@ class ChatAgent:
             # Look for numbers that might be days or people
             import re
 
-            numbers = re.findall(r'\d+', message)
+            numbers = re.findall(r"\d+", message)
             if numbers:
                 if "day" in message_lower:
                     extracted["days"] = numbers[0]
@@ -181,7 +181,7 @@ class ChatAgent:
 
             # Look for budget keywords
             if "$" in message or "budget" in message_lower:
-                budget_numbers = re.findall(r'\$?(\d+)', message)
+                budget_numbers = re.findall(r"\$?(\d+)", message)
                 if budget_numbers:
                     extracted["budget"] = budget_numbers[0]
 
@@ -207,7 +207,7 @@ class ChatAgent:
         
         Return the following JSON structure:
         {{
-        {', '.join([f'"{field}": ""' for field in self.all_fields])}
+        {", ".join([f'"{field}": ""' for field in self.all_fields])}
         }}
         
         For required fields, if any information is missing or unclear, leave it as an empty string.

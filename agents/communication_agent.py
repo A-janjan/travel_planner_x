@@ -1,3 +1,4 @@
+import os
 from langchain_openai import ChatOpenAI
 from langchain_core.messages import SystemMessage, HumanMessage
 
@@ -5,7 +6,10 @@ from langchain_core.messages import SystemMessage, HumanMessage
 class CommunicationAgent:
     def __init__(self, model_name="gpt-4o"):
         """Initialize CommunicationAgent with AI model for communication."""
-        self.model = ChatOpenAI(model=model_name, temperature=0.7)
+        try:
+            self.model = ChatOpenAI(model=model_name, temperature=0.7) if os.getenv("OPENAI_API_KEY") else None
+        except Exception:
+            self.model = None
 
     def post_car_rental_request(self, location, duration, user_prefs):
         """Generate car rental request post."""
@@ -14,14 +18,14 @@ class CommunicationAgent:
         duration = round(duration, 2)
         # Get user preferences with defaults and proper type conversion
         num_people = (
-            int(user_prefs.get('people', 1))
-            if isinstance(user_prefs.get('people'), str)
-            else user_prefs.get('people', 1)
+            int(user_prefs.get("people", 1))
+            if isinstance(user_prefs.get("people"), str)
+            else user_prefs.get("people", 1)
         )
-        has_kids = user_prefs.get('kids', False)
+        has_kids = user_prefs.get("kids", False)
         if isinstance(has_kids, str):
-            has_kids = has_kids.lower() == 'yes' or has_kids.lower() == 'true'
-        budget_level = user_prefs.get('budget', 'medium')
+            has_kids = has_kids.lower() == "yes" or has_kids.lower() == "true"
+        budget_level = user_prefs.get("budget", "medium")
 
         # Format the prompt with consistent information
         prompt = f"""
@@ -30,11 +34,11 @@ class CommunicationAgent:
         Location: {location}
         Duration: {duration} days
         Number of people: {num_people}
-        Kids: {'Yes' if has_kids else 'No'}
+        Kids: {"Yes" if has_kids else "No"}
         Budget level: {budget_level}
         
         The post should be polite, clear, and include all necessary information.
-        {'Include a request for child seats if available.' if has_kids else ''}
+        {"Include a request for child seats if available." if has_kids else ""}
         Make sure the information about kids and budget matches exactly with the provided details.
         """
 
@@ -45,6 +49,21 @@ class CommunicationAgent:
             HumanMessage(content=prompt),
         ]
 
+        if self.model is None:
+            return {
+                "post_content": (
+                    f"Car rental request for {num_people} traveler(s) in {location} "
+                    f"for {duration} days (budget: {budget_level})."
+                ),
+                "location": location,
+                "duration": duration,
+                "status": "pending",
+                "user_prefs": {
+                    "num_people": num_people,
+                    "has_kids": has_kids,
+                    "budget_level": budget_level,
+                },
+            }
         response = self.model(messages)
 
         # Return structured data with consistent information
@@ -62,7 +81,7 @@ class CommunicationAgent:
         A car rental company has responded to the following car rental request:
         
         Original request:
-        {rental_post['post_content']}
+        {rental_post["post_content"]}
         
         Their response:
         {response_message}
@@ -78,19 +97,24 @@ class CommunicationAgent:
             HumanMessage(content=prompt),
         ]
 
+        if self.model is None:
+            return {
+                "reply_content": "Thank you for the update. Please confirm the total price, vehicle type, and pickup details.",
+                "original_post": rental_post,
+                "response_message": response_message,
+            }
         response = self.model(messages)
 
         return {"reply_content": response.content, "original_post": rental_post, "response_message": response_message}
 
     def generate_booking_confirmation(self, itinerary, budget_estimate, car_rental=None, user_name=None):
         """Generate booking confirmation message."""
-        name = "Traveler"  # Always use a generic fallback
         prompt = f"""
         Generate a friendly, comprehensive trip confirmation message to the traveler with the following details:
         
         Itinerary: {itinerary}
         Budget Estimate: {budget_estimate}
-        Car Rental: {car_rental if car_rental is not None else 'Not specified'}
+        Car Rental: {car_rental if car_rental is not None else "Not specified"}
         
         The message should be polite, clear, and address the user directly as 'you'.
         """
@@ -100,5 +124,7 @@ class CommunicationAgent:
             ),
             HumanMessage(content=prompt),
         ]
+        if self.model is None:
+            return f"Your trip plan is ready. Estimated budget: {budget_estimate}. Please verify all prices, opening hours, and bookings before traveling."
         response = self.model(messages)
         return response.content

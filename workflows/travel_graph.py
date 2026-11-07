@@ -26,7 +26,6 @@ class TravelGraphSingleton:
             print("[DEBUG] Initializing TravelGraph agents (singleton)")
             # Initialize agents only once
             self.info_agent = InformationAgent()
-            self.chat_agent = ChatAgent()
             self.strategy_agent = StrategyAgent()
             self.recommend_agent = RecommendAgent()
             self.route_agent = RouteAgent()
@@ -48,7 +47,7 @@ class TravelGraph:
 
         # Use agents from singleton
         self.info_agent = TravelGraph._singleton.info_agent
-        self.chat_agent = TravelGraph._singleton.chat_agent
+        self.chat_agent = ChatAgent()
         self.strategy_agent = TravelGraph._singleton.strategy_agent
         self.recommend_agent = TravelGraph._singleton.recommend_agent
         self.route_agent = TravelGraph._singleton.route_agent
@@ -79,8 +78,8 @@ class TravelGraph:
     def process_step(self, step_name, **kwargs):
         print(f"[DEBUG] Processing step {step_name}")
 
-        if 'ai_recommendation_generated' in kwargs:
-            self.state['ai_recommendation_generated'] = str(kwargs['ai_recommendation_generated']).lower() == 'true'
+        if "ai_recommendation_generated" in kwargs:
+            self.state["ai_recommendation_generated"] = str(kwargs["ai_recommendation_generated"]).lower() == "true"
 
         result = {}
         if step_name == "chat":
@@ -160,9 +159,9 @@ class TravelGraph:
                 weather_data_result = self.info_agent.get_weather(
                     city_coordinates["lat"], city_coordinates["lng"], user_start_date, num_days, summary=True
                 )
-                if weather_data_result and 'summary' in weather_data_result:
-                    summary_val = weather_data_result['summary']
-                    if hasattr(summary_val, 'content'):  # If AIMessage
+                if weather_data_result and "summary" in weather_data_result:
+                    summary_val = weather_data_result["summary"]
+                    if hasattr(summary_val, "content"):  # If AIMessage
                         weather_summary_str = summary_val.content
                     elif isinstance(summary_val, str):
                         weather_summary_str = summary_val
@@ -221,8 +220,8 @@ class TravelGraph:
             attractions = self.state["attractions"]
 
             # Check if we have selected_attraction_ids in kwargs
-            if 'selected_attraction_ids' in kwargs and kwargs['selected_attraction_ids']:
-                selected_attraction_ids = kwargs['selected_attraction_ids']
+            if "selected_attraction_ids" in kwargs and kwargs["selected_attraction_ids"]:
+                selected_attraction_ids = kwargs["selected_attraction_ids"]
 
             if selected_attraction_ids:
                 # User has selected specific attractions
@@ -278,9 +277,9 @@ class TravelGraph:
     def _process_strategy(self, **kwargs):
         """Process strategy agent step"""
         # Check if this is a confirm selection request or a satisfaction confirmation
-        user_input_lower = kwargs.get('user_input', '').lower()
-        is_confirm_selection = user_input_lower == 'here are my selected attractions'
-        is_satisfaction_confirmation = 'satisfied with your recommendation' in user_input_lower
+        user_input_lower = kwargs.get("user_input", "").lower()
+        is_confirm_selection = user_input_lower == "here are my selected attractions"
+        is_satisfaction_confirmation = "satisfied with your recommendation" in user_input_lower
 
         # Log what type of confirmation message we received
         if is_confirm_selection:
@@ -291,16 +290,16 @@ class TravelGraph:
             print(f"[DEBUG] Received other input: '{user_input_lower}'")
 
         # Print the current state of should_rent_car for debugging
-        if 'should_rent_car' in self.state:
+        if "should_rent_car" in self.state:
             print(f"[DEBUG] Current should_rent_car value: {self.state['should_rent_car']}")
         else:
             print("[DEBUG] should_rent_car not yet set in state")
 
         # If recommendations haven't been generated yet and this is the initial confirm selection
-        if not self.state['ai_recommendation_generated'] and is_confirm_selection:
+        if not self.state["ai_recommendation_generated"] and is_confirm_selection:
             # Update state flags BEFORE generating recommendations
-            self.state['ai_recommendation_generated'] = True
-            self.state['user_input_processed'] = True
+            self.state["ai_recommendation_generated"] = True
+            self.state["user_input_processed"] = True
 
             selected_attractions = self.state["selected_attractions"]
             total_days = self.state["user_info"].get("days", 1)
@@ -354,11 +353,11 @@ class TravelGraph:
             }
         # Handle both cases: either we have already generated recommendations
         # or this is a satisfaction confirmation message
-        elif self.state['ai_recommendation_generated'] or is_satisfaction_confirmation:
+        elif self.state["ai_recommendation_generated"] or is_satisfaction_confirmation:
             print("[DEBUG] Recommendations already generated or satisfaction confirmed, moving to next step")
 
             # Check if this is a satisfaction confirmation message and we need to process it specially
-            if is_satisfaction_confirmation and not self.state['ai_recommendation_generated']:
+            if is_satisfaction_confirmation and not self.state["ai_recommendation_generated"]:
                 print("[CRITICAL] Handling satisfaction confirmation without prior recommendation generation")
                 # This means user sent satisfaction message before going through normal flow
                 # We need to ensure should_rent_car is correctly set to false in this case

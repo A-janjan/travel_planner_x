@@ -4,11 +4,7 @@ from datetime import datetime, timedelta
 import networkx as nx
 from utils import ask_openai, extract_number
 import re
-import sys
-import os
 
-# Add the parent directory to sys.path to allow imports from services
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from agents.information_agent import InformationAgent
 
 
@@ -66,7 +62,7 @@ class RouteAgent:
 
             # Call plan_with_waypoints
             optimized_route_data = self.info_agent.plan_with_waypoints(
-                origin=origin_location, destination=destination_location, waypoints=waypoints, mode='driving'
+                origin=origin_location, destination=destination_location, waypoints=waypoints, mode="driving"
             )
 
             if not optimized_route_data:
@@ -74,7 +70,7 @@ class RouteAgent:
                 return self.get_optimal_route(attractions_for_day)
 
             # Extract the optimized waypoint order
-            waypoint_indices = optimized_route_data.get('waypoint_original_indices', [])
+            waypoint_indices = optimized_route_data.get("waypoint_original_indices", [])
 
             # Create the optimized list of attractions
             optimized_attractions = [origin]  # Start with origin
@@ -163,7 +159,7 @@ class RouteAgent:
     def _solve_tsp_brute_force(self, spots, distance_matrix):
         """Solve TSP by trying all permutations (only for small problems)"""
         n = len(spots)
-        best_distance = float('inf')
+        best_distance = float("inf")
         best_order = list(range(n))
 
         # Try all permutations
@@ -212,11 +208,11 @@ class RouteAgent:
         # Sort day keys numerically (e.g., "day1", "day2", ...)
         sorted_day_keys = sorted(
             [key for key in daily_plan_name_dict.keys() if key.startswith("day") and re.match(r"day\d+", key)],
-            key=lambda x: int(re.findall(r'\d+', x)[0]),
+            key=lambda x: int(re.findall(r"\d+", x)[0]),
         )
 
         for day_key in sorted_day_keys:
-            day_number = int(re.findall(r'\d+', day_key)[0])
+            day_number = int(re.findall(r"\d+", day_key)[0])
             spot_names_for_day = daily_plan_name_dict.get(day_key, [])
 
             current_day_spot_objects_raw = []
