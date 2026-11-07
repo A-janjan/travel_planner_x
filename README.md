@@ -2,8 +2,6 @@
 
 An AI-assisted travel-planning web app that collects trip preferences, discovers attractions from OpenStreetMap-based services, recommends places, builds a day-by-day itinerary, estimates a budget, and visualizes places on a map.
 
-> **Project status:** Reconstructed from a Repomix source archive. The project is usable for local development, but should be treated as a prototype: sessions are in memory, external-service availability varies, and an LLM API key is needed for the full planning flow.
-
 ## Features
 
 - Conversational collection of trip details and constraints
